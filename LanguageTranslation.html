@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Translation Tool</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            color: #334155; /* Slate 700 */
+        }
+        .input-group textarea,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1; /* Slate 300 */
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #1e293b; /* Slate 800 */
+            background-color: #f8fafc; /* Slate 50 */
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .input-group textarea:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #3b82f6; /* Blue 500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background-color: #3b82f6; /* Blue 500 */
+            color: white;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+        .btn-primary:hover {
+            background-color: #2563eb; /* Blue 600 */
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            background-color: #1d4ed8; /* Blue 700 */
+            transform: translateY(0);
+        }
+        .btn-secondary {
+            background-color: #e2e8f0; /* Slate 200 */
+            color: #1e293b; /* Slate 800 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1; /* Slate 300 */
+            transform: translateY(-1px);
+        }
+        .btn-secondary:active {
+            background-color: #94a3b8; /* Slate 400 */
+            transform: translateY(0);
+        }
+        .output-box {
+            background-color: #f8fafc; /* Slate 50 */
+            border: 1px solid #cbd5e1; /* Slate 300 */
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 100px;
+            color: #1e293b; /* Slate 800 */
+            font-size: 1rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            display: flex;
+            align-items: center; /* Vertically center content if short */
+        }
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #64748b; /* Slate 500 */
+        }
+        .spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3b82f6; /* Blue */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 640px) {
+            .language-selectors {
+                flex-direction: row;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Language Translation Tool</h1>
+
+        <div class="input-group">
+            <label for="inputText">Enter text to translate:</label>
+            <textarea id="inputText" rows="6" placeholder="Type or paste your text here..."></textarea>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 language-selectors">
+            <div class="input-group flex-1">
+                <label for="sourceLanguage">Source Language:</label>
+                <select id="sourceLanguage"></select>
+            </div>
+            <div class="input-group flex-1">
+                <label for="targetLanguage">Target Language:</label>
+                <select id="targetLanguage"></select>
+            </div>
+        </div>
+
+        <button id="translateButton" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square-text"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/></svg>
+            Translate Text
+        </button>
+
+        <div id="loadingIndicator" class="loading-indicator hidden">
+            <div class="spinner"></div>
+            <span>Translating...</span>
+        </div>
+
+        <div class="input-group">
+            <label for="translatedText">Translated Text:</label>
+            <div id="translatedText" class="output-box"></div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+            <button id="copyButton" class="btn btn-secondary flex-1" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy Translated Text
+            </button>
+            <button id="speechButton" class="btn btn-secondary flex-1" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                Listen to Translation
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM element references
+        const inputText = document.getElementById('inputText');
+        const sourceLanguageSelect = document.getElementById('sourceLanguage');
+        const targetLanguageSelect = document.getElementById('targetLanguage');
+        const translateButton = document.getElementById('translateButton');
+        const translatedTextDiv = document.getElementById('translatedText');
+        const copyButton = document.getElementById('copyButton');
+        const speechButton = document.getElementById('speechButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // List of common languages with their codes
+        const languages = [
+            { name: "Auto-detect", code: "auto" }, // Special code for auto-detection
+            { name: "English", code: "en" },
+            { name: "Spanish", code: "es" },
+            { name: "French", code: "fr" },
+            { name: "German", code: "de" },
+            { name: "Italian", code: "it" },
+            { name: "Portuguese", code: "pt" },
+            { name: "Chinese (Simplified)", code: "zh-CN" },
+            { name: "Japanese", code: "ja" },
+            { name: "Korean", code: "ko" },
+            { name: "Arabic", code: "ar" },
+            { name: "Russian", code: "ru" },
+            { name: "Hindi", code: "hi" },
+            { name: "Bengali", code: "bn" },
+            { name: "Dutch", code: "nl" },
+            { name: "Turkish", code: "tr" },
+            { name: "Vietnamese", code: "vi" },
+            { name: "Polish", code: "pl" },
+            { name: "Swedish", code: "sv" },
+            { name: "Greek", code: "el" }
+            // Add more languages as needed
+        ];
+
+        // Function to populate language dropdowns
+        function populateLanguageDropdowns() {
+            languages.forEach(lang => {
+                const sourceOption = document.createElement('option');
+                sourceOption.value = lang.code;
+                sourceOption.textContent = lang.name;
+                sourceLanguageSelect.appendChild(sourceOption);
+
+                if (lang.code !== "auto") { // 'Auto-detect' is not a valid target language
+                    const targetOption = document.createElement('option');
+                    targetOption.value = lang.code;
+                    targetOption.textContent = lang.name;
+                    targetLanguageSelect.appendChild(targetOption);
+                }
+            });
+
+            // Set default selections
+            sourceLanguageSelect.value = "auto";
+            targetLanguageSelect.value = "en"; // Default target to English
+        }
+
+        // Function to handle translation using Gemini API
+        async function translateText() {
+            const textToTranslate = inputText.value.trim();
+            const sourceLang = sourceLanguageSelect.value;
+            const targetLang = targetLanguageSelect.value;
+
+            if (!textToTranslate) {
+                translatedTextDiv.textContent = 'Please enter text to translate.';
+                return;
+            }
+
+            // Disable buttons and show loading indicator
+            translateButton.disabled = true;
+            copyButton.disabled = true;
+            speechButton.disabled = true;
+            translatedTextDiv.textContent = ''; // Clear previous translation
+            loadingIndicator.classList.remove('hidden');
+
+            try {
+                let prompt;
+                if (sourceLang === "auto") {
+                    prompt = `Translate the following text into ${languages.find(l => l.code === targetLang).name}:\n\n"${textToTranslate}"`;
+                } else {
+                    prompt = `Translate the following text from ${languages.find(l => l.code === sourceLang).name} to ${languages.find(l => l.code === targetLang).name}:\n\n"${textToTranslate}"`;
+                }
+                
+                // Gemini API call structure
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // API key will be provided by the Canvas environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const translated = result.candidates[0].content.parts[0].text;
+                    translatedTextDiv.textContent = translated;
+                    copyButton.disabled = false;
+                    speechButton.disabled = false;
+                } else {
+                    translatedTextDiv.textContent = 'Translation failed: No valid response from API. Please try again.';
+                    console.error('API response structure unexpected:', result);
+                }
+            } catch (error) {
+                translatedTextDiv.textContent = 'An error occurred during translation. Please check your network connection or try again later.';
+                console.error('Translation error:', error);
+            } finally {
+                // Re-enable button and hide loading indicator
+                translateButton.disabled = false;
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        // Function to copy text to clipboard
+        function copyText() {
+            const textToCopy = translatedTextDiv.textContent;
+            if (textToCopy) {
+                // Use document.execCommand for better compatibility in iframe environments
+                const textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    // Optional: Show a brief success message
+                    console.log('Text copied to clipboard!');
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+        }
+
+        // Function for text-to-speech
+        function speakTranslatedText() {
+            const textToSpeak = translatedTextDiv.textContent;
+            if (textToSpeak) {
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                // Set language for speech if possible (based on target language)
+                // Note: Not all browsers support all voices for all languages.
+                utterance.lang = targetLanguageSelect.value;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Event Listeners
+        window.onload = () => {
+            populateLanguageDropdowns();
+            translateButton.addEventListener('click', translateText);
+            copyButton.addEventListener('click', copyText);
+            speechButton.addEventListener('click', speakTranslatedText);
+        };
+    </script>
+</body>
+</html>
